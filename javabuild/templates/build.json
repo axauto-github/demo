@@ -1,0 +1,50 @@
+{
+  "type": "service_template",
+  "subtype": "container",
+  "version": "",
+  "name": "CassandraPluginBuild",
+  "dns_name": "",
+  "description": "Cassandra Plugin Build",
+  "cost": 0,
+  "container": {
+    "resources": {
+      "mem_mib": 800,
+      "cpu_cores": 0.1,
+      "disk_gb": 0
+    },
+    "image": "docker.local/javabuild:v1",
+    "docker_options": "-e MAVEN_OPTS=\"-Xmx512m -XX:MaxPermSize=128m\"",
+    "command": "sh -c 'cd /src && mvn --batch-mode package -Dmaven.test.skip=true'",
+    "expand": false,
+    "once": false
+  },
+  "inputs": {
+    "artifacts": [
+      {
+        "service_id": "%%checkout%%",
+        "name": "results",
+        "path": "/src"
+      }
+    ],
+    "parameters": {
+      "checkout": {}
+    }
+  },
+  "outputs": {
+    "artifacts": {
+      "pluginjars": {
+        "path": "/src/plugin/target",
+        "excludes": [
+          ""
+        ],
+        "index": [
+          ""
+        ],
+        "meta_data": [
+          ""
+        ],
+        "storage_method": "blob"
+      }
+    }
+  }
+}

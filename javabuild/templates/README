@@ -1,0 +1,8 @@
+The template exmaple is used to build and test cassandra-lucene-index project(https://github.com/Stratio/cassandra-lucene-index).
+
+1. Build the javabuild container image.
+2. Fork the cassandra-lucene-index to your github account.
+3. Add the repo in the Applatix Tool to track it.
+4. Create the build,test,workflow service templates.
+5. Trigger the service template from the commit page by selecting commit from cassandra-lucene-index repo.
+

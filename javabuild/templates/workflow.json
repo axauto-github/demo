@@ -1,0 +1,212 @@
+{
+  "type": "service_template",
+  "subtype": "workflow",
+  "version": "",
+  "name": "CassandraPlugin",
+  "dns_name": "",
+  "description": "CassandraPlugin",
+  "cost": 0,
+  "inputs": {
+    "parameters": {
+      "branch": {
+        "description": "The branch that we checkout",
+        "default": "%%session.branch%%"
+      },
+      "commit": {
+        "description": "The commit revision that we checkout",
+        "default": "%%session.commit%%"
+      },
+      "repo": {
+        "description": "The repo that we checkout",
+        "default": "%%session.repo%%"
+      }
+    }
+  },
+  "outputs": {},
+  "steps": [
+    {
+      "checkout": {
+        "template": {
+          "id": "96b96713-1731-11e6-b692-0242ac110002",
+          "type": "service_template",
+          "subtype": "checkout",
+          "version": "v1",
+          "name": "axcheckout",
+          "dns_name": "axcheckout",
+          "description": "axcheckout",
+          "cost": 0,
+          "container": {
+            "resources": {
+              "mem_mib": 650,
+              "cpu_cores": 0.5,
+              "disk_gb": 0
+            },
+            "image": "docker.applatix.io/prod/axcheckout:v1",
+            "docker_options": "-v /var/run/docker.sock:/var/run/docker.sock --add-host docker.applatix.io:52.35.230.80 --add-host docker.local:$(MASTER_IP) -e JENKINS_OPTS=--httpPort=$PORT0 -p $PORT0:$PORT0 -e JAVA_OPTS=-Xmx256m",
+            "command": "",
+            "expand": true,
+            "once": true
+          },
+          "inputs": {
+            "parameters": {
+              "branch": {
+                "description": "The branch that we checkout",
+                "default": "%%session.branch%%"
+              },
+              "commit": {
+                "description": "The commit revision that we checkout",
+                "default": "%%session.commit%%"
+              },
+              "repo": {
+                "description": "The repo that we checkout",
+                "default": "%%session.repo%%"
+              },
+              "scripts": {
+                "description": "The checkout scripts that we want to run, separated by semicolons, e.g. dir1/checkout.sh; dir2/checkout.sh",
+                "default": "echo checkout"
+              }
+            }
+          },
+          "outputs": {
+            "artifacts": {
+              "logs": {
+                "path": "/outputs/logs",
+                "archive_mode": "tar",
+                "storage_method": "blob"
+              },
+              "results": {
+                "path": "/outputs/artifacts",
+                "archive_mode": "tar",
+                "storage_method": "blob"
+              },
+              "source": {
+                "path": "/tmp",
+                "archive_mode": "tar",
+                "storage_method": "blob"
+              }
+            }
+          }
+        },
+        "parameters": {
+          "branch": "",
+          "commit": "",
+          "repo": "",
+          "scripts": "echo checkout"
+        },
+        "status": 0,
+        "cost": 0,
+        "launch_time": 0,
+        "run_time": 0,
+        "average_runtime": 0
+      }
+    },
+    {
+      "build": {
+        "template": {
+          "type": "service_template",
+          "subtype": "container",
+          "version": "",
+          "name": "CassandraPluginBuild",
+          "dns_name": "",
+          "description": "Cassandra Plugin Build",
+          "cost": 0,
+          "container": {
+            "resources": {
+              "mem_mib": 800,
+              "cpu_cores": 0.1,
+              "disk_gb": 0
+            },
+            "image": "docker.local/javabuild:v1",
+            "docker_options": "-e MAVEN_OPTS=\"-Xmx512m -XX:MaxPermSize=128m\"",
+            "command": "sh -c 'cd /src && mvn --batch-mode package -Dmaven.test.skip=true'",
+            "expand": false,
+            "once": false
+          },
+          "inputs": {
+            "artifacts": [
+              {
+                "service_id": "%%checkout%%",
+                "name": "results",
+                "path": "/src"
+              }
+            ],
+            "parameters": {
+              "checkout": {}
+            }
+          },
+          "outputs": {
+            "artifacts": {
+              "pluginjars": {
+                "path": "/src/plugin/target",
+                "excludes": [
+                  ""
+                ],
+                "index": [
+                  ""
+                ],
+                "meta_data": [
+                  ""
+                ],
+                "storage_method": "blob"
+              }
+            }
+          }
+        },
+        "parameters": {
+          "checkout": "%%service.checkout.id%%"
+        },
+        "status": 0,
+        "cost": 0,
+        "launch_time": 0,
+        "run_time": 0,
+        "average_runtime": 0
+      }
+    },
+    {
+      "test": {
+        "template": {
+          "type": "service_template",
+          "subtype": "container",
+          "version": "",
+          "name": "CassandraPluginTest",
+          "dns_name": "",
+          "description": "Cassandra Plugin Test",
+          "cost": 0,
+          "container": {
+            "resources": {
+              "mem_mib": 800,
+              "cpu_cores": 0.1,
+              "disk_gb": 0
+            },
+            "image": "docker.local/javabuild:v1",
+            "docker_options": "-e MAVEN_OPTS=\"-Xmx512m -XX:MaxPermSize=128m\"",
+            "command": "sh -c 'cd /src && mvn --batch-mode test'",
+            "expand": false,
+            "once": false
+          },
+          "inputs": {
+            "artifacts": [
+              {
+                "service_id": "%%checkout%%",
+                "name": "results",
+                "path": "/src"
+              }
+            ],
+            "parameters": {
+              "checkout": {}
+            }
+          },
+          "outputs": {}
+        },
+        "parameters": {
+          "checkout": "%%service.checkout.id%%"
+        },
+        "status": 0,
+        "cost": 0,
+        "launch_time": 0,
+        "run_time": 0,
+        "average_runtime": 0
+      }
+    }
+  ]
+}
